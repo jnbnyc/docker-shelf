@@ -1,0 +1,11 @@
+---
+
+
+matrix:
+  - jessie
+
+jessie:
+  name: jessie
+  org: nyc.jnb.devops
+  override_docker_repo: jnbnyc
+  build_type: docker
