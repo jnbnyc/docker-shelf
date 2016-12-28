@@ -9,3 +9,4 @@ jessie:
   org: nyc.jnb.devops
   override_docker_repo: jnbnyc
   build_type: docker
+  scm: jnbnyc/docker-shelf
