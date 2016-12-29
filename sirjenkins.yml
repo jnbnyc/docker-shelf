@@ -19,5 +19,6 @@
       artifactNumToKeep: -1
     build_type: docker
     docker:
+      build_context: {name}
       override_repo: jnbnyc
     scm: jnbnyc/docker-shelf
