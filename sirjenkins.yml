@@ -17,5 +17,7 @@
       numToKeep: 20
       artifactDaysToKeep: -1
       artifactNumToKeep: -1
-    build-type: docker
+    build_type: docker
+    docker:
+      override_repo: jnbnyc
     scm: jnbnyc/docker-shelf
