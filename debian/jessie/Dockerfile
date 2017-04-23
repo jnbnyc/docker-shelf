@@ -8,7 +8,7 @@ ENV BASE_INSTALLED_PACKAGES "ca-certificates curl wget vim less locales dnsutils
 ADD install-apts.sh /usr/local/sbin/install-apts
 ADD remove-apts.sh /usr/local/sbin/remove-apts
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+RUN install-apts apt-utils
 RUN install-apts ${BASE_INSTALLED_PACKAGES}
 
 RUN dpkg-reconfigure locales && \
