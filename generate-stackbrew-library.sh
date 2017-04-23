@@ -1,24 +1,11 @@
 #!/bin/bash
-set -eu
-# set -x
 
-declare -A aliases=(
-	[jessie]="latest $(cat jessie/version.txt)"
-)
-
-DOCKER_REPO='jnbnyc'
-GIT_REPO=$(git remote get-url origin)
-
-self="$(basename "$BASH_SOURCE")"
-cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
-
-versions=( */ )
-versions=( "${versions[@]%/}" )
 
 # get the most recent commit which modified any of "$@"
 fileCommit() {
 	git log -1 --format='format:%H' HEAD -- "$@"
 }
+
 
 # get the most recent commit which modified "$1/Dockerfile" or any file COPY'd from "$1/Dockerfile"
 dirCommit() {
@@ -37,13 +24,6 @@ dirCommit() {
 	)
 }
 
-cat <<-EOH
-# this file is generated via ${GIT_REPO}/blob/$(fileCommit "$self")/$self
-
-Maintainers: $(cat MAINTAINERS)
-GitRepo: ${GIT_REPO%%.git}
-EOH
-[ -z "$DOCKER_REPO" ] || echo "Constraints: ${DOCKER_REPO}"
 
 # prints "$2$1$3$1...$N"
 join() {
@@ -52,10 +32,52 @@ join() {
 	echo "${out#$sep}"
 }
 
+# End Methods
+
+set -eu
+
+if [ "${1:-}" == '-v' ]; then
+  set -x
+	shift
+fi
+
+# declare -A aliases=()
+
+DOCKER_REPO='jnbnyc'
+GIT_REPO=$(git remote get-url origin)
+GIT_ROOT=$(git rev-parse --show-toplevel)
+MAINTAINERS=$(cat MAINTAINERS)  # default maintainers
+
+self="$(basename "$BASH_SOURCE")"
+self_commit="$(fileCommit "$self")"
+# cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
+cd ${1:-./}
+
+versions=( */ )
+versions=( "${versions[@]%/}" )
+
+[ -f 'MAINTAINERS' ] && MAINTAINERS=$(cat MAINTAINERS)
+cat <<-EOH
+# this file is generated via ${GIT_REPO}/blob/$self_commit/$self
+
+Maintainers: ${MAINTAINERS}
+GitRepo: ${GIT_REPO%%.git}
+EOH
+[ -z "$DOCKER_REPO" ] || echo "Constraints: ${DOCKER_REPO}"
+
+
 for version in "${versions[@]}"; do
 	commit="$(dirCommit "$version")"
 
-	fullVersion="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "ENV" && $2 == "THIS_VERSION" { print $3; exit }')"
+	fullVersion="$(git show "$commit":"./$version/Dockerfile" | awk '$1 == "ENV" && $2 == "THIS_VERSION" { print $3; exit }')"
+	if [ -z "$fullVersion" ] && [ -f "./$version/version.txt" ]; then
+		fullVersion="$(cat ./$version/version.txt)"
+	fi
+
+	declare -A aliases=()
+	if [ -f "./$version/aliases" ]; then
+		aliases[$version]="latest $(cat $version/aliases)"
+	fi
 
 	versionAliases=(
 		$fullVersion
@@ -67,7 +89,7 @@ for version in "${versions[@]}"; do
 	cat <<-EOE
 		Tags: $(join ', ' "${versionAliases[@]}")
 		GitCommit: $commit
-		Directory: $version
+		Directory: $(git rev-parse --show-prefix)$version
 	EOE
 
 	for v in \
