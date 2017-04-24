@@ -1,0 +1,18 @@
+
+version: '3'
+services:
+  swarm_agent:
+    build: .
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/local/bin/docker:/bin/docker
+      # - /var/lib/docker:/var/lib/docker
+      - ~/.docker/config.json:/var/jenkins_home/.docker/config.json
+      # - ~/.ssh:/var/jenkins_home/.ssh
+    environment:
+      # - 'SWARM_MASTER=http://sirjenkins:8080'
+      - 'SWARM_CREDENTIALS=user1234:pass1234'
+      # - 'LOGLEVEL=DEBUG'
+    # external_links:
+    #   - sirjenkins_sirjenkins_1
+    # privileged: true
